@@ -1,0 +1,125 @@
+---
+
+# Source: retail-store-sample-chart/charts/catalog/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: catalog
+  labels:
+    helm.sh/chart: catalog-1.5.0
+    app.kubernetes.io/name: catalog
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/component: service
+    app.kubernetes.io/owner: retail-store-sample
+    app.kubernetes.io/managed-by: Helm
+---
+
+# Source: retail-store-sample-chart/charts/catalog/templates/configmap.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalog
+data:
+  RETAIL_CATALOG_PERSISTENCE_PROVIDER: in-memory
+---
+
+# Source: retail-store-sample-chart/charts/catalog/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog
+  labels:
+    helm.sh/chart: catalog-1.5.0
+    app.kubernetes.io/name: catalog
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/component: service
+    app.kubernetes.io/owner: retail-store-sample
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: catalog
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/component: service
+    app.kubernetes.io/owner: retail-store-sample
+---
+
+# Source: retail-store-sample-chart/charts/catalog/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog
+  labels:
+    helm.sh/chart: catalog-1.5.0
+    app.kubernetes.io/name: catalog
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/component: service
+    app.kubernetes.io/owner: retail-store-sample
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: catalog
+      app.kubernetes.io/instance: release-name
+      app.kubernetes.io/component: service
+      app.kubernetes.io/owner: retail-store-sample
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8080"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/name: catalog
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/component: service
+        app.kubernetes.io/owner: retail-store-sample
+    spec:
+      serviceAccountName: catalog
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: catalog
+          envFrom:
+            - configMapRef:
+                name: catalog
+          securityContext:
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          image: "devesh121/retail-store-catalog:1.5.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              cpu: 256m
+              memory: 256Mi
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp-volume
+      volumes:
+        - name: tmp-volume
+          emptyDir:
+            medium: Memory

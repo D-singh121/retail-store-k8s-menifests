@@ -1,0 +1,28 @@
+---
+
+# Source: retail-store-sample-chart/charts/catalog/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: catalog-db
+data:
+  RETAIL_CATALOG_PERSISTENCE_USER: "Y2F0YWxvZw=="
+  RETAIL_CATALOG_PERSISTENCE_PASSWORD: "WXYzNVA4aW1DQXpCMmZQRQ=="
+---
+
+# Source: retail-store-sample-chart/charts/orders/templates/rabbitmq-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: orders-rabbitmq
+data:
+---
+
+# Source: retail-store-sample-chart/charts/orders/templates/secret-db.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: orders-db
+data:
+  RETAIL_ORDERS_PERSISTENCE_USERNAME: "b3JkZXJz"
+  RETAIL_ORDERS_PERSISTENCE_PASSWORD: "VXRJWjdoY0lyY21CZnFRbg=="
